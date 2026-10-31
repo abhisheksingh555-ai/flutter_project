@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/items_provider.dart';
-
 import '../../models/item_model.dart';
 
 import '../audio/audio_player_screen.dart';
@@ -170,6 +169,21 @@ class HomeDashboard extends StatelessWidget {
 
         const SizedBox(height: 32),
 
+        // LOCAL ITEMS SECTION
+        const Text('My Local Items', style: AppTextStyles.title),
+
+        const SizedBox(height: 12),
+
+        if (provider.localItems.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(12),
+            child: Text('No local items yet. Add your first item!'),
+          )
+        else
+          ...provider.localItems.map((item) => ItemCard(item: item)),
+
+        const SizedBox(height: 24),
+
         // API POSTS SECTION
         const Text('API Posts', style: AppTextStyles.title),
 
@@ -211,33 +225,98 @@ class HomeDashboard extends StatelessWidget {
           // EMPTY STATE
           ItemsStatus.empty => const Padding(
             padding: EdgeInsets.all(20),
-            child: Center(child: Text('No items available')),
+            child: Center(child: Text('No API posts available')),
           ),
 
           // SUCCESS STATE
-          ItemsStatus.success => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Total Items: ${provider.items.length}'),
-
-              const SizedBox(height: 12),
-
-              ...provider.items.map((item) => ItemCard(item: item)),
-            ],
-          ),
+          ItemsStatus.success => _buildApiItems(provider),
         },
       ],
     );
   }
+
+  Widget _buildApiItems(ItemsProvider provider) {
+    final apiItems = provider.items
+        .where((item) => !provider.isLocalItem(item))
+        .toList();
+
+    if (apiItems.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(12),
+        child: Text('No API posts available'),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Total API Posts: ${apiItems.length}'),
+
+        const SizedBox(height: 12),
+
+        ...apiItems.map((item) => ItemCard(item: item)),
+      ],
+    );
+  }
 }
+
+// ITEM CARD
 
 class ItemCard extends StatelessWidget {
   final ItemModel item;
 
   const ItemCard({super.key, required this.item});
 
+  Future<void> _deleteItem(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Delete Item?'),
+          content: Text('Are you sure you want to delete "${item.title}"?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await context.read<ItemsProvider>().deleteItem(item.id);
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Item deleted successfully')),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not delete item: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isLocal = context.select<ItemsProvider, bool>(
+      (provider) => provider.isLocalItem(item),
+    );
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
@@ -248,13 +327,39 @@ class ItemCard extends StatelessWidget {
           );
         },
 
-        leading: CircleAvatar(child: Text('${item.id}')),
+        leading: CircleAvatar(child: Text('${item.id.abs()}')),
 
         title: Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis),
 
         subtitle: Text(item.body, maxLines: 2, overflow: TextOverflow.ellipsis),
 
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        trailing: isLocal
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: 'Edit',
+                    icon: const Icon(Icons.edit, color: Colors.blue),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddEditScreen(item: item),
+                        ),
+                      );
+                    },
+                  ),
+
+                  IconButton(
+                    tooltip: 'Delete',
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () {
+                      _deleteItem(context);
+                    },
+                  ),
+                ],
+              )
+            : const Icon(Icons.arrow_forward_ios, size: 16),
       ),
     );
   }
