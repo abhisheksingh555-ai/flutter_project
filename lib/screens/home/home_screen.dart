@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../audio/audio_player_screen.dart';
+import '../video/video_player_screen.dart';
+import '../profile/profile_screen.dart';
+import '../details/details_screen.dart';
+import '../add_edit/add_edit_screen.dart';
+
 import '../../core/theme/app_text_styles.dart';
 import '../../widgets/custom_button.dart';
-import '../../widgets/custom_text_field.dart';
-import '../../widgets/loading_view.dart';
-import '../../widgets/empty_view.dart';
-import '../../widgets/error_view.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,23 +17,62 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _formKey = GlobalKey<FormState>();
+  int _selectedIndex = 0;
 
-  final TextEditingController _nameController = TextEditingController();
+  final List<Widget> _screens = const [
+    HomeDashboard(),
+    AudioPlayerScreen(),
+    VideoPlayerScreen(),
+    ProfileScreen(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(index: _selectedIndex, children: _screens),
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Welcome ${_nameController.text.trim()}!')),
-      );
-    }
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: _onItemTapped,
+
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+
+          NavigationDestination(
+            icon: Icon(Icons.music_note_outlined),
+            selectedIcon: Icon(Icons.music_note),
+            label: 'Music',
+          ),
+
+          NavigationDestination(
+            icon: Icon(Icons.video_library_outlined),
+            selectedIcon: Icon(Icons.video_library),
+            label: 'Video',
+          ),
+
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
   }
+}
+
+class HomeDashboard extends StatelessWidget {
+  const HomeDashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -45,84 +86,56 @@ class _HomeScreenState extends State<HomeScreen> {
 
           const SizedBox(height: 8),
 
-          Text('M1 - Theme and Reusable Widgets', style: AppTextStyles.caption),
+          const Text('Manage your content in one place.'),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
 
-          const Text('Custom TextField', style: AppTextStyles.title),
+          const Text('Quick Actions', style: AppTextStyles.title),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
 
-          Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                CustomTextField(
-                  controller: _nameController,
-                  labelText: 'Your Name',
-                  hintText: 'Enter your name',
-                  prefixIcon: Icons.person,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Name is required';
-                    }
-
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 16),
-
-                CustomButton(
-                  text: 'Submit',
-                  onPressed: _submitForm,
-                  icon: Icons.check,
-                ),
-              ],
-            ),
+          CustomButton(
+            text: 'View Item Details',
+            icon: Icons.visibility,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const DetailsScreen()),
+              );
+            },
           ),
 
-          const SizedBox(height: 32),
-
-          const Text('Loading View', style: AppTextStyles.title),
-
           const SizedBox(height: 12),
 
-          const SizedBox(
-            height: 110,
-            child: LoadingView(message: 'Loading data...'),
+          CustomButton(
+            text: 'Add New Item',
+            icon: Icons.add,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AddEditScreen()),
+              );
+            },
           ),
 
-          const Divider(height: 32),
-
-          const Text('Empty View', style: AppTextStyles.title),
-
           const SizedBox(height: 12),
 
-          const SizedBox(
-            height: 230,
-            child: EmptyView(
-              title: 'No Items Found',
-              message: 'Your items will appear here.',
-            ),
+          CustomButton(
+            text: 'Open Login',
+            icon: Icons.login,
+            onPressed: () {
+              Navigator.pushNamed(context, '/login');
+            },
           ),
 
-          const Divider(height: 32),
-
-          const Text('Error View', style: AppTextStyles.title),
-
           const SizedBox(height: 12),
 
-          SizedBox(
-            height: 220,
-            child: ErrorView(
-              message: 'Unable to load data.',
-              onRetry: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Retry button clicked')),
-                );
-              },
-            ),
+          CustomButton(
+            text: 'Open Signup',
+            icon: Icons.person_add,
+            onPressed: () {
+              Navigator.pushNamed(context, '/signup');
+            },
           ),
         ],
       ),
