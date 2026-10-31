@@ -6,15 +6,9 @@ import 'providers/auth_provider.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(create: (_) => AuthProvider(), child: const MyApp()),
+    ChangeNotifierProvider(
+      create: (_) => AuthProvider(),
+      child: const MediaTaskHubApp(),
+    ),
   );
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MediaTaskHubApp();
-  }
 }
