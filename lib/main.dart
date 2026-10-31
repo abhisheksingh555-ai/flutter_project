@@ -3,11 +3,15 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'providers/auth_provider.dart';
+import 'providers/items_provider.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => ItemsProvider()),
+      ],
       child: const MediaTaskHubApp(),
     ),
   );
