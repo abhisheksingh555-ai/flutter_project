@@ -1,10 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../data/audio_playlist.dart';
+import '../models/audio_track_model.dart';
 import '../services/audio_service.dart';
 
 class AudioProvider extends ChangeNotifier {
   final AudioService _audioService = AudioService();
+
+  final List<AudioTrackModel> _playlist = audioPlaylist;
+
+  int _currentIndex = 0;
 
   bool _isLoading = false;
   bool _hasError = false;
@@ -13,6 +19,12 @@ class AudioProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get hasError => _hasError;
   String? get errorMessage => _errorMessage;
+
+  List<AudioTrackModel> get playlist => _playlist;
+
+  int get currentIndex => _currentIndex;
+
+  AudioTrackModel get currentTrack => _playlist[_currentIndex];
 
   Stream<PlayerState> get playerStateStream => _audioService.playerStateStream;
 
@@ -39,6 +51,31 @@ class AudioProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> playTrack(int index) async {
+    if (index < 0 || index >= _playlist.length) return;
+
+    _currentIndex = index;
+    notifyListeners();
+
+    await loadAudio(currentTrack.audioUrl);
+
+    if (!_hasError) {
+      await play();
+    }
+  }
+
+  Future<void> nextTrack() async {
+    final nextIndex = (_currentIndex + 1) % _playlist.length;
+    await playTrack(nextIndex);
+  }
+
+  Future<void> previousTrack() async {
+    final previousIndex =
+        (_currentIndex - 1 + _playlist.length) % _playlist.length;
+
+    await playTrack(previousIndex);
   }
 
   Future<void> play() async {
