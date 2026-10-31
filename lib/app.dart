@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'core/theme/app_theme.dart';
 import 'providers/auth_provider.dart';
+import 'providers/theme_provider.dart';
 
 import 'screens/home/home_screen.dart';
 import 'screens/auth/login_screen.dart';
@@ -18,22 +19,34 @@ class MediaTaskHubApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'MediaTask Hub',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-
-      home: const AuthGate(),
-
-      routes: {
-        '/login': (context) => const LoginScreen(),
-        '/signup': (context) => const SignupScreen(),
-        '/home': (context) => const HomeScreen(),
-        '/details': (context) => const DetailsScreen(),
-        '/add-edit': (context) => const AddEditScreen(),
-        '/audio': (context) => const AudioPlayerScreen(),
-        '/video': (context) => const VideoPlayerScreen(),
-        '/profile': (context) => const ProfileScreen(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'MediaTask Hub',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF6750A4),
+              brightness: Brightness.dark,
+            ),
+          ),
+          themeMode: themeProvider.isDarkMode
+              ? ThemeMode.dark
+              : ThemeMode.light,
+          home: const AuthGate(),
+          routes: {
+            '/login': (context) => const LoginScreen(),
+            '/signup': (context) => const SignupScreen(),
+            '/home': (context) => const HomeScreen(),
+            '/details': (context) => const DetailsScreen(),
+            '/add-edit': (context) => const AddEditScreen(),
+            '/audio': (context) => const AudioPlayerScreen(),
+            '/video': (context) => const VideoPlayerScreen(),
+            '/profile': (context) => const ProfileScreen(),
+          },
+        );
       },
     );
   }
