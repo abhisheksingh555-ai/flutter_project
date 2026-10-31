@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/auth_provider.dart';
 
 import '../audio/audio_player_screen.dart';
 import '../video/video_player_screen.dart';
@@ -36,30 +39,25 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _screens),
-
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: _onItemTapped,
-
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
             label: 'Home',
           ),
-
           NavigationDestination(
             icon: Icon(Icons.music_note_outlined),
             selectedIcon: Icon(Icons.music_note),
             label: 'Music',
           ),
-
           NavigationDestination(
             icon: Icon(Icons.video_library_outlined),
             selectedIcon: Icon(Icons.video_library),
             label: 'Video',
           ),
-
           NavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),
@@ -77,23 +75,27 @@ class HomeDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('MediaTask Hub')),
-
+      appBar: AppBar(
+        title: const Text('MediaTask Hub'),
+        actions: [
+          IconButton(
+            tooltip: 'Logout',
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await context.read<AuthProvider>().logout();
+            },
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           Text('Welcome to MediaTask Hub!', style: AppTextStyles.heading),
-
           const SizedBox(height: 8),
-
           const Text('Manage your content in one place.'),
-
           const SizedBox(height: 28),
-
           const Text('Quick Actions', style: AppTextStyles.title),
-
           const SizedBox(height: 16),
-
           CustomButton(
             text: 'View Item Details',
             icon: Icons.visibility,
@@ -104,9 +106,7 @@ class HomeDashboard extends StatelessWidget {
               );
             },
           ),
-
           const SizedBox(height: 12),
-
           CustomButton(
             text: 'Add New Item',
             icon: Icons.add,
@@ -117,9 +117,7 @@ class HomeDashboard extends StatelessWidget {
               );
             },
           ),
-
           const SizedBox(height: 12),
-
           CustomButton(
             text: 'Open Login',
             icon: Icons.login,
@@ -127,9 +125,7 @@ class HomeDashboard extends StatelessWidget {
               Navigator.pushNamed(context, '/login');
             },
           ),
-
           const SizedBox(height: 12),
-
           CustomButton(
             text: 'Open Signup',
             icon: Icons.person_add,
